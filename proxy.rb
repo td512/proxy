@@ -15,65 +15,60 @@ def save(hash)
 end
 
 # Create register if it doesn't exist
-puts "Starting up..."
-unless File.exists?("register.yml")
-      File.new("register.yml", "w+")
-end
+puts 'Starting up...'
+File.new('register.yml', 'w+') unless File.exist?('register.yml')
 
 get '/register' do
   headers\
-  "Server" => 'monarch-proxy'
+    'Server' => 'monarch-proxy'
   content_type :json
   check_key params[:key]
-  halt 500 if !params[:app] && !params[:ip] && !params[:port] && !params[:path] && !params[:dpath] && !params[:type] && !params[:appkey]
+  halt 500 if !params[:app] || !params[:ip] || !params[:port] || \
+              !params[:path] || !params[:dpath] || !params[:type] || \
+              !params[:appkey]
   register = YAML.load_file 'register.yml'
-  register = Hash.new if register == false
-  register[params[:app]] = Hash.new
-  register[params[:app]]["ip"] = params[:ip]
-  register[params[:app]]["port"] = params[:port]
-  register[params[:app]]["path"] = params[:path]
-  register[params[:app]]["dpath"] = params[:dpath]
-  register[params[:app]]["type"] = params[:type]
-  register[params[:app]]["appkey"] = params[:appkey]
+  register = {} if register == false
+  register[params[:app]] = {}
+  register[params[:app]]['ip'] = params[:ip]
+  register[params[:app]]['port'] = params[:port]
+  register[params[:app]]['path'] = params[:path]
+  register[params[:app]]['dpath'] = params[:dpath]
+  register[params[:app]]['type'] = params[:type]
+  register[params[:app]]['appkey'] = params[:appkey]
   save register
-  {:message => "registered"}.to_json
+  { message: 'registered' }.to_json
 end
 
 get '/deregister' do
   headers\
-  "Server" => 'monarch-proxy'
+    'Server' => 'monarch-proxy'
   content_type :json
   check_key params[:key]
-  halt 500 if !params[:app]
+  halt 500 unless params[:app]
   register = YAML.load_file 'register.yml'
   register.delete(params[:app])
   save register
-  {:message => "deleted"}.to_json
+  { message: 'deleted' }.to_json
 end
 
 get '/deploy' do
   headers\
-  "Server" => 'monarch-proxy'
+    'Server' => 'monarch-proxy'
   content_type :json
   check_key params[:key]
-  halt 500 if !params[:user]
-  responses = Array.new
+  halt 500 unless params[:user]
+  responses = []
   register = YAML.load_file 'register.yml'
-  register.each do |r, d|
+  register.each do |_r, d|
     begin
-      if d["type"] == "nologin"
-        loginType = "?isNoLogin=true&"
-      else
-        loginType = "?"
-      end
-      res = RestClient.get "http://#{d["ip"]}:#{d["port"]}/#{d["path"]}#{loginType}user=#{params[:user]}&key=#{d["appkey"]}"
+      d['type'] == 'nologin' ? (login_type = '?isNoLogin=true&') : (login_type = '?')
+      res = RestClient.get "http://#{d['ip']}:#{d['port']}/#{d['path']}#{login_type}user=#{params[:user]}&key=#{d['appkey']}"
     rescue RestClient::ExceptionWithResponse
     end
-      responses.push(res.body)
+    responses.push(res.body)
   end
-  puts responses
-  hash = responses.map {|x| [x,true]}.to_h
-  if hash.has_key? 'exists'
+  hash = responses.map { |x| [x, true] }.to_h
+  if hash.key? 'exists'
     'Account already exists'
   else
     'Account created'
@@ -82,17 +77,17 @@ end
 
 get '/destroy' do
   headers\
-  "Server" => 'monarch-proxy'
+    'Server' => 'monarch-proxy'
   content_type :json
   check_key params[:key]
-  halt 500 if !params[:user]
-  responses = Array.new
+  halt 500 unless params[:user]
+  responses = []
   register = YAML.load_file 'register.yml'
-  register.each do |r, d|
+  register.each do |_r, d|
     begin
-      res = RestClient.get "http://#{d["ip"]}:#{d["port"]}#{d["dpath"]}?user=#{params[:user]}&key=#{d["appkey"]}"
+      res = RestClient.get "http://#{d['ip']}:#{d['port']}#{d['dpath']}?user=#{params[:user]}&key=#{d['appkey']}"
     rescue RestClient::ExceptionWithResponse
     end
-end
-'Account deleted'
+  end
+  'Account deleted'
 end
