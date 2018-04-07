@@ -17,6 +17,7 @@ end
 # Create register if it doesn't exist
 puts 'Starting up...'
 File.new('register.yml', 'w+') unless File.exist?('register.yml')
+set :bind, '0.0.0.0'
 
 get '/register' do
   headers\
