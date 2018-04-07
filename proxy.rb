@@ -25,7 +25,7 @@ get '/register' do
   "Server" => 'monarch-proxy'
   content_type :json
   check_key params[:key]
-  halt 500 if !params[:app] && !params[:ip] && !params[:port] && !params[:path] && !params[:dpath] && !params[:type]
+  halt 500 if !params[:app] && !params[:ip] && !params[:port] && !params[:path] && !params[:dpath] && !params[:type] && !params[:appkey]
   register = YAML.load_file 'register.yml'
   register = Hash.new if register == false
   register[params[:app]] = Hash.new
@@ -34,6 +34,7 @@ get '/register' do
   register[params[:app]]["path"] = params[:path]
   register[params[:app]]["dpath"] = params[:dpath]
   register[params[:app]]["type"] = params[:type]
+  register[params[:app]]["appkey"] = params[:appkey]
   save register
   {:message => "registered"}.to_json
 end
@@ -65,7 +66,7 @@ get '/deploy' do
       else
         loginType = "?"
       end
-      res = RestClient.get "http://#{d["ip"]}:#{d["port"]}/#{d["path"]}#{loginType}user=#{params[:user]}"
+      res = RestClient.get "http://#{d["ip"]}:#{d["port"]}/#{d["path"]}#{loginType}user=#{params[:user]}&key=#{d["appkey"]}"
     rescue RestClient::ExceptionWithResponse
     end
       responses.push(res.body)
@@ -89,7 +90,7 @@ get '/destroy' do
   register = YAML.load_file 'register.yml'
   register.each do |r, d|
     begin
-      res = RestClient.get "http://#{d["ip"]}:#{d["port"]}#{d["dpath"]}?user=#{params[:user]}"
+      res = RestClient.get "http://#{d["ip"]}:#{d["port"]}#{d["dpath"]}?user=#{params[:user]}&key=#{d["appkey"]}"
     rescue RestClient::ExceptionWithResponse
     end
 end
