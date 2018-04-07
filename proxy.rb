@@ -63,17 +63,11 @@ get '/deploy' do
   register.each do |_r, d|
     begin
       d['type'] == 'nologin' ? (login_type = '?isNoLogin=true&') : (login_type = '?')
-      res = RestClient.get "http://#{d['ip']}:#{d['port']}/#{d['path']}#{login_type}user=#{params[:user]}&key=#{d['appkey']}"
+      RestClient.get "http://#{d['ip']}:#{d['port']}/#{d['path']}#{login_type}user=#{params[:user]}&key=#{d['appkey']}"
     rescue RestClient::ExceptionWithResponse
     end
-    responses.push(res.body)
   end
-  hash = responses.map { |x| [x, true] }.to_h
-  if hash.key? 'exists'
-    'Account already exists'
-  else
-    'Account created'
-  end
+  'Account created'
 end
 
 get '/destroy' do
@@ -86,7 +80,7 @@ get '/destroy' do
   register = YAML.load_file 'register.yml'
   register.each do |_r, d|
     begin
-      res = RestClient.get "http://#{d['ip']}:#{d['port']}#{d['dpath']}?user=#{params[:user]}&key=#{d['appkey']}"
+      RestClient.get "http://#{d['ip']}:#{d['port']}#{d['dpath']}?user=#{params[:user]}&key=#{d['appkey']}"
     rescue RestClient::ExceptionWithResponse
     end
   end
