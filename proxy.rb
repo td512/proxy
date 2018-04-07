@@ -58,7 +58,6 @@ get '/deploy' do
   content_type :json
   check_key params[:key]
   halt 500 unless params[:user]
-  responses = []
   register = YAML.load_file 'register.yml'
   register.each do |_r, d|
     begin
@@ -76,7 +75,6 @@ get '/destroy' do
   content_type :json
   check_key params[:key]
   halt 500 unless params[:user]
-  responses = []
   register = YAML.load_file 'register.yml'
   register.each do |_r, d|
     begin
